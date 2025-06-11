@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etheria Restart Manager</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* * ================================================
+         * THÈME SOMBRE ET MODERNE POUR ETHERIA RESTART MANAGER
+         * ================================================
+        */
+
+        :root {
+            --primary-color: #00aaff; /* Un bleu électrique comme accent */
+            --primary-color-hover: #33bbff;
+            --background-color: #121828; /* Fond bleu nuit très sombre */
+            --card-background: rgba(30, 40, 65, 0.5); /* Verre dépoli sombre */
+            --text-color: #e0e0e0; /* Texte blanc cassé pour le confort */
+            --text-color-muted: #a0a0a0; /* Texte plus discret */
+            --border-color: rgba(255, 255, 255, 0.1); /* Bordure subtile */
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --edit-color: #3498db;
+            --star-color: #f1c40f;
+        }
+
+        /* --- Styles Généraux --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--background-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 170, 255, 0.2), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(100, 80, 255, 0.15), transparent 40%);
+            color: var(--text-color);
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        /* --- En-tête --- */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            color: white;
+            font-size: 2.5em;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            text-shadow: 0 0 15px rgba(0, 170, 255, 0.5);
+        }
+        header h1 .fa-gamepad {
+            color: var(--primary-color);
+        }
+
+        /* --- Contenu Principal & Cartes --- */
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .form-container, .list-container, .modal-content {
+            background: var(--card-background);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px 0 var(--shadow-color);
+            flex: 1;
+        }
+
+        .form-container {
+            min-width: 350px;
+            flex-basis: 350px;
+        }
+         .list-container {
+            flex-basis: calc(100% - 380px); /* 350px + 30px gap */
+        }
+
+        h2 {
+            margin-top: 0;
+            color: white;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* --- Formulaires --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.9em;
+            color: var(--text-color-muted);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            color: var(--text-color);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(0, 170, 255, 0.3);
+        }
+        select option {
+             background-color: #2a3b5a;
+             color: var(--text-color);
+        }
+
+        .image-placeholder {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 150px;
+            cursor: pointer;
+            color: var(--text-color-muted);
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        .image-placeholder:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(0, 170, 255, 0.05);
+        }
+        .image-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .submit-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .submit-btn:hover {
+            background-color: var(--primary-color-hover);
+            transform: translateY(-2px);
+        }
+
+        /* --- Tableau des Unités --- */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        thead th {
+            background-color: rgba(0, 170, 255, 0.1);
+            color: white;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        thead th:first-child { border-radius: 8px 0 0 0; }
+        thead th:last-child { border-radius: 0 8px 0 0; }
+
+        tbody tr {
+            transition: background-color 0.3s ease;
+        }
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Styles pour l'affichage des compétences */
+        .unit-habiletes {
+            display: flex;
+            flex-direction: column;
+            gap: 4px; /* Espace entre les lignes de compétence */
+        }
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .skill-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-color-muted);
+            width: 25px; /* Aligne les barres de points */
+        }
+        .skill-dots .filled {
+            color: var(--primary-color);
+            font-size: 1.1em;
+        }
+        .skill-dots .empty {
+            color: var(--border-color);
+            opacity: 0.5;
+            font-size: 1.1em;
+        }
+        
+        .stars .fa-star { color: var(--star-color); }
+
+        .action-buttons { display: flex; gap: 15px; }
+        .action-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3em;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .edit-btn { color: var(--edit-color); }
+        .delete-btn { color: var(--danger-color); }
+        .action-buttons button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .unit-image-cell {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 500;
+        }
+        .unit-image-cell img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+        }
+
+        /* --- Fenêtre Modale --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            animation: fadeIn 0.4s ease;
+        }
+        .modal-content {
+            margin: 8% auto;
+            max-width: 600px;
+            width: 90%;
+            animation: slideInUp 0.5s ease-out;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close-btn {
+            color: var(--text-color-muted);
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .close-btn:hover {
+            color: white;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+
+        /* --- Scrollbar customisée --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--background-color); }
+        ::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-color-hover); }
+
+        /* --- Responsive --- */
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .form-container, .list-container {
+                flex-basis: 100%;
+            }
+        }
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            header h1 { font-size: 1.8em; }
+            .form-grid { grid-template-columns: 1fr; }
+            .modal-content { margin: 15% auto; padding: 20px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1><i class="fa-solid fa-gamepad"></i> Etheria Restart Manager</h1>
+        </header>
+
+        <div class="main-content">
+            <div class="form-container">
+                <h2>Ajouter une Unité</h2>
+                <form id="add-unit-form">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Image de l'Unité</label>
+                            <input type="file" id="unit-image-input" accept="image/*" style="display: none;">
+                            <div class="image-placeholder" id="image-placeholder">
+                                <span>Cliquez pour ajouter une image</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="unit-name">Nom de l'Unité *</label>
+                            <input type="text" id="unit-name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="unit-element">Élément *</label>
+                            <select id="unit-element" required>
+                                <option value="">Choisir...</option>
+                                <option value="Rouge">Rouge</option>
+                                <option value="Bleu">Bleu</option>
+                                <option value="Vert">Vert</option>
+                                <option value="Dark">Dark</option>
+                                <option value="Light">Light</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unit-rarity">Rareté *</label>
+                            <select id="unit-rarity" required>
+                                <option value="">Choisir...</option>
+                                <option value="R">R</option>
+                                <option value="SR">SR</option>
+                                <option value="SSR">SSR</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="unit-role">Rôle</label>
+                            <select id="unit-role">
+                                <option value="Pas de rôle">Pas de rôle</option>
+                                <option value="Attaquant">Attaquant</option>
+                                <option value="Défenseur">Défenseur</option>
+                                <option value="Support">Support</option>
+                                <option value="Soigneur">Soigneur</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unit-stars">Étoiles * (3-6)</label>
+                            <input type="number" id="unit-stars" min="3" max="6" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unit-level">Level *</label>
+                            <input type="number" id="unit-level" min="1" max="100" required>
+                        </div>
+                        
+                         <div class="form-group">
+                            <label for="unit-doublon">Doublon *</label>
+                            <select id="unit-doublon" required>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unit-s1">S1 * (1-5)</label>
+                            <input type="number" id="unit-s1" min="1" max="5" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unit-s2">S2 * (1-5)</label>
+                            <input type="number" id="unit-s2" min="1" max="5" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unit-s3">S3 * (1-5)</label>
+                            <input type="number" id="unit-s3" min="1" max="5" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                           <button type="submit" class="submit-btn">AJOUTER L'UNITÉ</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="list-container">
+                <h2>Liste des Unités</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>UNITÉ</th>
+                                <th>ÉLÉMENT</th>
+                                <th>RARETÉ</th>
+                                <th>RÔLE</th>
+                                <th>ÉTOILES</th>
+                                <th>LEVEL</th>
+                                <th>DOUBLON</th>
+                                <th>HABILITÉS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unit-list-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Modifier l'Unité</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form id="edit-unit-form">
+                <input type="hidden" id="edit-unit-index">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="edit-unit-name">Nom de l'Unité *</label>
+                        <input type="text" id="edit-unit-name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-unit-element">Élément *</label>
+                        <select id="edit-unit-element" required>
+                            <option value="">Choisir...</option>
+                            <option value="Rouge">Rouge</option>
+                            <option value="Bleu">Bleu</option>
+                            <option value="Vert">Vert</option>
+                            <option value="Dark">Dark</option>
+                            <option value="Light">Light</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-unit-rarity">Rareté *</label>
+                        <select id="edit-unit-rarity" required>
+                            <option value="">Choisir...</option>
+                            <option value="R">R</option>
+                            <option value="SR">SR</option>
+                            <option value="SSR">SSR</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="edit-unit-role">Rôle</label>
+                        <select id="edit-unit-role">
+                            <option value="Pas de rôle">Pas de rôle</option>
+                            <option value="Attaquant">Attaquant</option>
+                            <option value="Défenseur">Défenseur</option>
+                            <option value="Support">Support</option>
+                            <option value="Soigneur">Soigneur</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-unit-stars">Étoiles * (3-6)</label>
+                        <input type="number" id="edit-unit-stars" min="3" max="6" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-unit-level">Level *</label>
+                        <input type="number" id="edit-unit-level" min="1" max="100" required>
+                    </div>
+                    
+                     <div class="form-group">
+                        <label for="edit-unit-doublon">Doublon *</label>
+                        <select id="edit-unit-doublon" required>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-unit-s1">S1 * (1-5)</label>
+                        <input type="number" id="edit-unit-s1" min="1" max="5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-unit-s2">S2 * (1-5)</label>
+                        <input type="number" id="edit-unit-s2" min="1" max="5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-unit-s3">S3 * (1-5)</label>
+                        <input type="number" id="edit-unit-s3" min="1" max="5" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                       <button type="submit" class="submit-btn">ENREGISTRER LES MODIFICATIONS</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- CONFIGURATION DE LA RECHERCHE D'IMAGE ---
+            const imageBaseUrl = 'https://raw.githubusercontent.com/kaiomar8z/Etheriaassets/main/';
+
+            // --- SÉLECTION DES ÉLÉMENTS DU DOM ---
+            const addForm = document.getElementById('add-unit-form');
+            const unitListBody = document.getElementById('unit-list-body');
+            
+            const imageInput = document.getElementById('unit-image-input');
+            const imagePlaceholder = document.getElementById('image-placeholder');
+            const unitNameInput = document.getElementById('unit-name'); // Pour la recherche auto
+            let unitImageData = null;
+
+            const editModal = document.getElementById('edit-modal');
+            const editForm = document.getElementById('edit-unit-form');
+            const closeModalBtn = document.querySelector('.close-btn');
+
+            let units = JSON.parse(localStorage.getItem('etheriaUnits')) || [];
+
+            const saveUnits = () => {
+                localStorage.setItem('etheriaUnits', JSON.stringify(units));
+            };
+
+            // --- GESTION DES IMAGES ---
+            
+            // Clic sur le placeholder pour ouvrir la sélection manuelle
+            imagePlaceholder.addEventListener('click', () => {
+                imageInput.click();
+            });
+
+            // Gestion de la sélection manuelle d'un fichier
+            imageInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        unitImageData = e.target.result;
+                        imagePlaceholder.innerHTML = `<img src="${unitImageData}" alt="Aperçu de l'unité">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // NOUVEAU : Recherche automatique de l'image depuis GitHub
+            const findUnitImage = async () => {
+                const unitName = unitNameInput.value.trim();
+                if (!unitName) return;
+
+                const formattedName = unitName.replace(/ /g, '_');
+                const extensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+                let foundImageUrl = null;
+
+                imagePlaceholder.innerHTML = '<span><i class="fa-solid fa-spinner fa-spin"></i> Recherche...</span>';
+
+                for (const ext of extensions) {
+                    const potentialUrl = `${imageBaseUrl}${formattedName}.${ext}`;
+                    try {
+                        const response = await fetch(potentialUrl, { method: 'HEAD' });
+                        if (response.ok) {
+                            foundImageUrl = potentialUrl;
+                            break;
+                        }
+                    } catch (error) { /* Continue */ }
+                }
+
+                if (foundImageUrl) {
+                    const response = await fetch(foundImageUrl);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        unitImageData = e.target.result;
+                        imagePlaceholder.innerHTML = `<img src="${unitImageData}" alt="${unitName}">`;
+                    };
+                    reader.readAsDataURL(blob);
+                } else {
+                    unitImageData = null;
+                    imagePlaceholder.innerHTML = '<span>Image non trouvée.<br>Cliquez pour uploader.</span>';
+                }
+            };
+            
+            // Déclenchement de la recherche auto quand on quitte le champ du nom
+            unitNameInput.addEventListener('blur', findUnitImage);
+
+
+            // --- FONCTIONS D'AFFICHAGE ---
+            const renderSkills = (unit) => {
+                const renderSkillLevel = (level) => {
+                    const filled = '<span class="filled">●</span>'.repeat(level);
+                    const empty = '<span class="empty">●</span>'.repeat(5 - level);
+                    return `${filled}${empty}`;
+                };
+
+                return `
+                    <div class="skill-item"><span class="skill-label">S1</span><span class="skill-dots">${renderSkillLevel(unit.s1)}</span></div>
+                    <div class="skill-item"><span class="skill-label">S2</span><span class="skill-dots">${renderSkillLevel(unit.s2)}</span></div>
+                    <div class="skill-item"><span class="skill-label">S3</span><span class="skill-dots">${renderSkillLevel(unit.s3)}</span></div>
+                `;
+            };
+            const renderStars = (count) => Array(parseInt(count)).fill('<i class="fa-solid fa-star"></i>').join('');
+            const renderDoublons = (count) => { 
+                const color = `hsl(${(parseInt(count) * 20)}, 100%, 60%)`;
+                return `<span style="color: ${color}; font-weight: bold; font-size: 1.5em">${'●'.repeat(parseInt(count))}</span><span style="opacity:0.3;">${'●'.repeat(5 - parseInt(count))}</span>`;
+            };
+
+            const displayUnits = () => {
+                unitListBody.innerHTML = '';
+
+                if (units.length === 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td colspan="9" style="text-align: center; padding: 40px; color: var(--text-color-muted);">Aucune unité ajoutée pour le moment.</td>`;
+                    unitListBody.appendChild(tr);
+                    return;
+                }
+
+                units.forEach((unit, index) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="unit-image-cell">
+                            <img src="${unit.image || 'https://via.placeholder.com/50x50/304065/e0e0e0?text=?'}" alt="${unit.name}">
+                            <span>${unit.name}</span>
+                        </td>
+                        <td>${unit.element}</td>
+                        <td>${unit.rarity}</td>
+                        <td>${unit.role}</td>
+                        <td class="stars">${renderStars(unit.stars)}</td>
+                        <td>${unit.level}</td>
+                        <td>${renderDoublons(unit.doublon)}</td>
+                        <td class="unit-habiletes">${renderSkills(unit)}</td>
+                        <td class="action-buttons">
+                            <button class="edit-btn" data-index="${index}" title="Modifier"><i class="fa-solid fa-pencil"></i></button>
+                            <button class="delete-btn" data-index="${index}" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    `;
+                    unitListBody.appendChild(tr);
+                });
+            };
+
+            // --- GESTION DES FORMULAIRES ET ÉVÉNEMENTS ---
+            addForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const newUnit = {
+                    name: unitNameInput.value,
+                    image: unitImageData,
+                    element: document.getElementById('unit-element').value,
+                    rarity: document.getElementById('unit-rarity').value,
+                    role: document.getElementById('unit-role').value,
+                    stars: parseInt(document.getElementById('unit-stars').value),
+                    level: parseInt(document.getElementById('unit-level').value),
+                    doublon: parseInt(document.getElementById('unit-doublon').value),
+                    s1: parseInt(document.getElementById('unit-s1').value),
+                    s2: parseInt(document.getElementById('unit-s2').value),
+                    s3: parseInt(document.getElementById('unit-s3').value),
+                };
+
+                units.push(newUnit);
+                units.sort((a, b) => b.level - a.level || b.stars - a.stars);
+                saveUnits();
+                displayUnits();
+                
+                addForm.reset();
+                unitImageData = null;
+                imagePlaceholder.innerHTML = '<span>Cliquez pour ajouter une image</span>';
+                imageInput.value = '';
+            });
+            
+            unitListBody.addEventListener('click', (event) => {
+                const target = event.target;
+                const editButton = target.closest('.edit-btn');
+                const deleteButton = target.closest('.delete-btn');
+
+                if (editButton) {
+                    const index = parseInt(editButton.dataset.index);
+                    openEditModal(index);
+                }
+
+                if (deleteButton) {
+                    const index = parseInt(deleteButton.dataset.index);
+                    if (confirm(`Êtes-vous sûr de vouloir supprimer ${units[index].name} ?`)) {
+                        units.splice(index, 1);
+                        saveUnits();
+                        displayUnits();
+                    }
+                }
+            });
+            
+            function openEditModal(index) {
+                const unit = units[index];
+                document.getElementById('edit-unit-index').value = index;
+                document.getElementById('edit-unit-name').value = unit.name;
+                document.getElementById('edit-unit-element').value = unit.element;
+                document.getElementById('edit-unit-rarity').value = unit.rarity;
+                document.getElementById('edit-unit-role').value = unit.role;
+                document.getElementById('edit-unit-stars').value = unit.stars;
+                document.getElementById('edit-unit-level').value = unit.level;
+                document.getElementById('edit-unit-doublon').value = unit.doublon;
+                document.getElementById('edit-unit-s1').value = unit.s1;
+                document.getElementById('edit-unit-s2').value = unit.s2;
+                document.getElementById('edit-unit-s3').value = unit.s3;
+
+                editModal.style.display = 'block';
+            }
+
+            function closeEditModal() {
+                editModal.style.display = 'none';
+            }
+
+            editForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const index = parseInt(document.getElementById('edit-unit-index').value);
+                
+                const unitToUpdate = units[index];
+                unitToUpdate.name = document.getElementById('edit-unit-name').value;
+                unitToUpdate.element = document.getElementById('edit-unit-element').value;
+                unitToUpdate.rarity = document.getElementById('edit-unit-rarity').value;
+                unitToUpdate.role = document.getElementById('edit-unit-role').value;
+                unitToUpdate.stars = parseInt(document.getElementById('edit-unit-stars').value);
+                unitToUpdate.level = parseInt(document.getElementById('edit-unit-level').value);
+                unitToUpdate.doublon = parseInt(document.getElementById('edit-unit-doublon').value);
+                unitToUpdate.s1 = parseInt(document.getElementById('edit-unit-s1').value);
+                unitToUpdate.s2 = parseInt(document.getElementById('edit-unit-s2').value);
+                unitToUpdate.s3 = parseInt(document.getElementById('edit-unit-s3').value);
+                
+                units.sort((a, b) => b.level - a.level || b.stars - a.stars);
+                saveUnits();
+                displayUnits();
+                closeEditModal();
+            });
+
+            closeModalBtn.addEventListener('click', closeEditModal);
+            window.addEventListener('click', (event) => {
+                if (event.target == editModal) {
+                    closeEditModal();
+                }
+            });
+
+            // Affichage initial au chargement de la page
+            displayUnits();
+        });
+    </script>
+</body>
+</html>
