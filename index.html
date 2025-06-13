@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etheria Restart Manager</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #00aaff;
+            --primary-color-hover: #33bbff;
+            --background-color: #121828;
+            --card-background: rgba(30, 40, 65, 0.5);
+            --text-color: #e0e0e0;
+            --text-color-muted: #a0a0a0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --edit-color: #3498db;
+            --danger-color: #e74c3c;
+            --star-color: #f1c40f;
+            --success-color: #2ecc71;
+            --info-color: #3498db;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', system-ui, sans-serif;
+            background-color: var(--background-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 170, 255, 0.2), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(100, 80, 255, 0.15), transparent 40%);
+            color: var(--text-color); padding: 30px; min-height: 100vh;
+        }
+        .container { max-width: 1600px; margin: auto; }
+        header { text-align: center; margin-bottom: 20px; }
+        header h1 {
+            color: white; font-size: 2.5em; font-weight: 700; display: inline-flex;
+            align-items: center; gap: 20px; text-shadow: 0 0 15px rgba(0, 170, 255, 0.5); margin-bottom: 20px;
+        }
+        header h1 .fa-gamepad { color: var(--primary-color); }
+        .main-nav {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 40px;
+        }
+        .nav-btn {
+            background-color: transparent; border: 2px solid var(--border-color); color: var(--text-color-muted);
+            padding: 10px 25px; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { color: white; border-color: var(--primary-color); }
+        .nav-btn.active { color: white; background-color: var(--primary-color); border-color: var(--primary-color); }
+        .view { display: none; }
+        .view.active { display: block; }
+        .view.active.flex { display: flex; flex-wrap: wrap; }
+        .card {
+            background: var(--card-background); backdrop-filter: blur(15px); padding: 30px; border-radius: 16px; border: 1px solid var(--border-color);
+        }
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .dashboard-container .span-2 {
+            grid-column: span 2;
+        }
+        .stat-card h3 { margin: 0 0 10px 0; font-size: 1em; color: var(--text-color-muted); text-transform: uppercase; font-weight: 500; }
+        .stat-card .stat-value { font-size: 2.2em; font-weight: 700; color: white; }
+        .stat-card .rarity-distribution { display: flex; gap: 15px; margin-top: 5px; }
+        .stat-card .rarity-distribution div { font-size: 1.5em; font-weight: 600; }
+        .stat-card .rarity-ssr { color: #ffd700; } .stat-card .rarity-sr { color: #c0c0c0; } .stat-card .rarity-r { color: #cd7f32; }
+        .element-distribution .element-bar { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9em; }
+        .element-distribution .element-label { width: 60px; }
+        .element-distribution .element-progress-bar { flex-grow: 1; background-color: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden; }
+        .element-distribution .element-progress { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+        .element-distribution .element-count { margin-left: 10px; font-weight: bold; }
+        .progress-Rouge { background-color: #e74c3c; } .progress-Bleu { background-color: #3498db; }
+        .progress-Vert { background-color: #2ecc71; } .progress-Dark { background-color: #9b59b6; } .progress-Light { background-color: #f1c40f; }
+        .team-builder-container {
+            display: flex; gap: 30px; align-items: flex-start;
+        }
+        .available-units, .current-team-container {
+             flex: 1;
+        }
+        .current-team-container { 
+            flex: 2; 
+        }
+        .unit-list-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px; max-height: 500px; overflow-y: auto; padding-top: 10px; padding-right: 10px;
+        }
+        .unit-list-grid img {
+            width: 100%; border-radius: 8px; cursor: grab;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .unit-list-grid img:hover {
+            transform: scale(1.1); box-shadow: 0 0 15px var(--primary-color);
+        }
+        .team-management {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 20px;
+        }
+        .team-management select, .team-management input { padding: 10px; }
+        .team-slots {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 20px;
+        }
+        .team-slot {
+            aspect-ratio: 1 / 1; border: 2px dashed var(--border-color); border-radius: 16px;
+            display: flex; justify-content: center; align-items: center; color: var(--text-color-muted);
+            font-weight: 500; position: relative; overflow: hidden; transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .team-slot.drag-over { background-color: rgba(0, 170, 255, 0.1); border-style: solid; }
+        .team-slot.is-selecting {
+            border-color: var(--success-color);
+            border-style: solid;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+        }
+        .team-slot img { width: 100%; height: 100%; object-fit: cover; cursor: default; }
+        .remove-from-team-btn {
+            position: absolute; top: 5px; right: 5px; width: 20px; height: 20px;
+            background-color: rgba(231, 76, 60, 0.8); color: white; border: none;
+            border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-size: 12px; opacity: 0; transition: opacity 0.2s;
+        }
+        .team-slot:hover .remove-from-team-btn { opacity: 1; }
+        .main-content { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; }
+        .form-container, .list-container, .modal-content {
+            background: var(--card-background); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            padding: 30px; border-radius: 16px; border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px 0 var(--shadow-color); flex: 1;
+        }
+        .form-container { min-width: 350px; flex-basis: 350px; }
+        .list-container { flex-basis: calc(100% - 380px); }
+        .list-header {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px; margin-bottom: 25px;
+        }
+        .list-header h2 { border: none; padding: 0; margin: 0; }
+        h2, h3 { margin-top: 0; color: white; font-weight: 600; }
+        h3 { margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .full-width { grid-column: 1 / -1; }
+        .form-buttons { display: flex; gap: 10px; grid-column: 1 / -1; margin-top: 15px; }
+        label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; color: var(--text-color-muted); }
+        input, select {
+            width: 100%; padding: 12px; background-color: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color); border-radius: 8px; font-size: 1em; color: var(--text-color);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 10px rgba(0, 170, 255, 0.3); }
+        select option { background-color: #2a3b5a; color: var(--text-color); }
+        .image-placeholder {
+            border: 2px dashed var(--border-color); border-radius: 8px; display: flex; align-items: center;
+            justify-content: center; text-align: center; height: 150px; cursor: pointer; color: var(--text-color-muted);
+            position: relative; overflow: hidden; transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        .image-placeholder:hover { border-color: var(--primary-color); background-color: rgba(0, 170, 255, 0.05); }
+        .image-placeholder img { width: 100%; height: 100%; object-fit: cover; }
+        .submit-btn, .action-btn {
+            background: var(--primary-color); color: white; border: none; padding: 10px 20px; font-size: 0.9em;
+            font-weight: bold; border-radius: 8px; cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .submit-btn { width: 100%; padding: 15px; font-size: 1.1em; flex-grow: 2;}
+        .submit-btn:hover, .action-btn:hover { background-color: var(--primary-color-hover); transform: translateY(-2px); }
+        .action-btn.import-btn { background-color: var(--success-color); }
+        .action-btn.clear-btn { background-color: var(--text-color-muted); flex-grow: 1; }
+        .action-btn.delete-selected-btn { background-color: var(--danger-color); }
+
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 20px; }
+        th, td { 
+            padding: 8px 15px;
+            text-align: left; 
+            border-bottom: 1px solid var(--border-color); 
+            vertical-align: middle; 
+        }
+        thead th {
+            background-color: rgba(30, 40, 65, 0.8); /* Fond plus opaque pour la lisibilité */
+            color: white; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px;
+            position: sticky; top: 0; z-index: 10;
+        }
+        thead th:first-child { border-radius: 8px 0 0 0; }
+        thead th:last-child { border-radius: 0 8px 0 0; }
+        tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .sortable { cursor: pointer; user-select: none; }
+        .sortable:hover { background-color: rgba(0, 170, 255, 0.2); }
+        .sort-arrow {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 1.1em; color: var(--primary-color); opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        th.sorted .sort-arrow { opacity: 1; }
+        .unit-image-cell { display: flex; align-items: center; gap: 15px; font-weight: 500; }
+        .unit-image-cell img {
+            width: 40px; height: 40px; border-radius: 6px;
+            object-fit: cover; border: 2px solid var(--border-color); flex-shrink: 0;
+        }
+        .unit-image-cell span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .unit-habiletes { display: flex; flex-direction: column; gap: 4px; }
+        .skill-item { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .skill-label { font-size: 0.8em; font-weight: 600; color: var(--text-color-muted); width: 25px; }
+        .skill-dots .filled { color: var(--primary-color); font-size: 1.1em; }
+        .skill-dots .empty { color: var(--border-color); opacity: 0.5; font-size: 1.1em; }
+        .stars .fa-star { color: var(--star-color); }
+        .action-buttons { display: flex; gap: 10px; justify-content: flex-start;}
+        .action-buttons button {
+            background: none; border: none; cursor: pointer; font-size: 1.3em; padding: 5px; border-radius: 50%;
+            width: 35px; height: 35px; display: inline-flex; justify-content: center; align-items: center;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .edit-btn { color: var(--edit-color); }
+        .delete-btn { color: var(--danger-color); }
+        .action-buttons button:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.7); animation: fadeIn 0.4s ease;
+        }
+        .modal-content { margin: 8% auto; max-width: 600px; width: 90%; animation: slideInUp 0.5s ease-out; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; }
+        .close-btn { color: var(--text-color-muted); font-size: 32px; font-weight: bold; cursor: pointer; transition: color 0.3s ease; }
+        .close-btn:hover { color: white; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--background-color); }
+        ::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-color-hover); }
+        
+        /* --- AMÉLIORATIONS QoL (CATÉGORIE 1) --- */
+        #toast-container {
+            position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px;
+        }
+        .toast {
+            padding: 15px 25px; border-radius: 8px; color: white; font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(10px);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 3s forwards;
+            border-left: 5px solid;
+        }
+        .toast.success { background: rgba(46, 204, 113, 0.5); border-color: var(--success-color); }
+        .toast.error { background: rgba(231, 76, 60, 0.5); border-color: var(--danger-color); }
+        .toast.info { background: rgba(52, 152, 219, 0.5); border-color: var(--info-color); }
+
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+        #confirm-modal { z-index: 1500; }
+        #confirm-modal .modal-content { max-width: 450px; }
+        #confirm-modal p { margin: 20px 0 30px; line-height: 1.6; }
+        #confirm-modal .modal-actions { display: flex; justify-content: flex-end; gap: 15px; }
+        .checkbox-cell { text-align: center !important; }
+
+        /* --- AMÉLIORATIONS RESPONSIVES --- */
+        @media (max-width: 1200px) {
+            .main-content, .team-builder-container { flex-direction: column; }
+        }
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            header h1 { font-size: 1.8em; }
+            .form-grid { grid-template-columns: 1fr; }
+            thead th:nth-child(5), td:nth-child(5), /* Rôle */
+            thead th:nth-child(8), td:nth-child(8)  /* Doublon */
+            { display: none; }
+        }
+        @media (max-width: 540px) {
+            .dashboard-container .span-2 { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fa-solid fa-gamepad"></i> Etheria Restart Manager</h1>
+            <nav class="main-nav">
+                <button id="show-manager-btn" class="nav-btn">Gestionnaire</button>
+                <button id="show-builder-btn" class="nav-btn">Équipes</button>
+            </nav>
+        </header>
+
+        <div id="manager-view" class="view">
+            <div class="dashboard-container">
+                <div class="stat-card card">
+                    <h3>Unités Totales</h3>
+                    <p class="stat-value" id="stat-total-units">0</p>
+                </div>
+                <div class="stat-card card">
+                    <h3>Rareté</h3>
+                    <div class="rarity-distribution">
+                        <div class="rarity-ssr" title="SSR"><i class="fa-solid fa-star"></i> <span id="stat-ssr-count">0</span></div>
+                        <div class="rarity-sr" title="SR"><i class="fa-solid fa-star"></i> <span id="stat-sr-count">0</span></div>
+                        <div class="rarity-r" title="R"><i class="fa-solid fa-star"></i> <span id="stat-r-count">0</span></div>
+                    </div>
+                </div>
+                <div class="stat-card card span-2">
+                    <h3>Éléments</h3>
+                    <div class="element-distribution" id="stat-element-distribution"></div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="form-container card">
+                    <h2>Ajouter une Unité</h2>
+                    <form id="add-unit-form">
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Image de l'Unité</label>
+                                <input type="file" id="unit-image-input" accept="image/*" style="display: none;">
+                                <div class="image-placeholder" id="image-placeholder">
+                                    <span>Cliquez pour ajouter une image</span>
+                                </div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="unit-name">Nom de l'Unité *</label>
+                                <input type="text" id="unit-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="unit-element">Élément *</label>
+                                <select id="unit-element" required><option value="">Choisir...</option><option value="Rouge">Rouge</option><option value="Bleu">Bleu</option><option value="Vert">Vert</option><option value="Dark">Dark</option><option value="Light">Light</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="unit-rarity">Rareté *</label>
+                                <select id="unit-rarity" required><option value="">Choisir...</option><option value="R">R</option><option value="SR">SR</option><option value="SSR">SSR</option></select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="unit-role">Rôle</label>
+                                <select id="unit-role"><option value="Pas de rôle">Pas de rôle</option><option value="Attaquant">Attaquant</option><option value="Défenseur">Défenseur</option><option value="Support">Support</option><option value="Soigneur">Soigneur</option></select>
+                            </div>
+                            <div class="form-group"><label for="unit-stars">Étoiles * (3-6)</label><input type="number" id="unit-stars" min="3" max="6" required></div>
+                            <div class="form-group"><label for="unit-level">Level *</label><input type="number" id="unit-level" min="1" max="100" required></div>
+                            <div class="form-group"><label for="unit-doublon">Doublon *</label><select id="unit-doublon" required><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+                            <div class="form-group"><label for="unit-s1">S1 * (1-5)</label><input type="number" id="unit-s1" min="1" max="5" required></div>
+                            <div class="form-group"><label for="unit-s2">S2 * (1-5)</label><input type="number" id="unit-s2" min="1" max="5" required></div>
+                            <div class="form-group"><label for="unit-s3">S3 * (1-5)</label><input type="number" id="unit-s3" min="1" max="5" required></div>
+                            <div class="form-buttons">
+                                <button type="button" id="clear-form-btn" class="action-btn clear-btn"><i class="fa-solid fa-eraser"></i> VIDER</button>
+                                <button type="submit" class="submit-btn">AJOUTER</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="list-container card">
+                    <div class="list-header">
+                        <h2>Liste des Unités</h2>
+                        <div class="header-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="delete-selected-btn" class="action-btn delete-selected-btn" style="display:none;">
+                                <i class="fa-solid fa-trash-can"></i> Supprimer la sélection
+                            </button>
+                            <input type="file" id="import-csv-input" accept=".csv,text/csv" style="display: none;">
+                            <label for="import-csv-input" class="action-btn">
+                                <i class="fa-solid fa-file-csv"></i> Importer CSV
+                            </label>
+                            <input type="file" id="import-input" accept=".json" style="display: none;">
+                            <label for="import-input" class="action-btn import-btn">
+                                <i class="fa-solid fa-upload"></i> Importer JSON
+                            </label>
+                            <button id="export-btn" class="action-btn">
+                                <i class="fa-solid fa-download"></i> Exporter
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-controls" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <input type="search" id="search-input" placeholder="Rechercher par nom..." style="flex: 2; min-width: 200px;">
+                        <select id="filter-element" style="flex: 1; min-width: 150px;">
+                            <option value="">Tous les éléments</option><option value="Rouge">Rouge</option><option value="Bleu">Bleu</option><option value="Vert">Vert</option><option value="Dark">Dark</option><option value="Light">Light</option>
+                        </select>
+                        <select id="filter-rarity" style="flex: 1; min-width: 150px;">
+                            <option value="">Toutes les raretés</option><option value="R">R</option><option value="SR">SR</option><option value="SSR">SSR</option>
+                        </select>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table id="units-table">
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-cell"><input type="checkbox" id="select-all-checkbox" title="Tout sélectionner"></th>
+                                    <th class="sortable" data-sort="name">UNITÉ<span class="sort-arrow"></span></th>
+                                    <th class="sortable" data-sort="element">ÉLÉMENT<span class="sort-arrow"></span></th>
+                                    <th class="sortable" data-sort="rarity">RARETÉ<span class="sort-arrow"></span></th>
+                                    <th>RÔLE</th>
+                                    <th class="sortable" data-sort="stars">ÉTOILES<span class="sort-arrow"></span></th>
+                                    <th class="sortable" data-sort="level">LEVEL<span class="sort-arrow"></span></th>
+                                    <th>DOUBLON</th>
+                                    <th>HABILITÉS</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unit-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="builder-view" class="view">
+            <div class="team-builder-container">
+                <div class="available-units card">
+                    <h3>Unités Disponibles</h3>
+                    <div id="team-builder-unit-list" class="unit-list-grid"></div>
+                </div>
+                <div class="current-team-container card">
+                    <h3>Équipe Actuelle</h3>
+                    <div class="team-management">
+                        <select id="team-select" class="action-btn"></select>
+                        <input type="text" id="team-name-input" placeholder="Nom de l'équipe...">
+                        <button id="save-team-btn" class="action-btn" title="Sauvegarder le nom"><i class="fa-solid fa-save"></i></button>
+                        <button id="new-team-btn" class="action-btn import-btn" title="Nouvelle équipe"><i class="fa-solid fa-plus"></i></button>
+                        <button id="delete-team-btn" class="action-btn" title="Supprimer l'équipe" style="background-color: var(--danger-color); border:none; color:white;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="team-slots"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h2>Modifier l'Unité</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form id="edit-unit-form">
+                <input type="hidden" id="edit-unit-index">
+                <div class="form-grid">
+                    <div class="form-group full-width"><label for="edit-unit-name">Nom de l'Unité *</label><input type="text" id="edit-unit-name" required></div>
+                    <div class="form-group"><label for="edit-unit-element">Élément *</label><select id="edit-unit-element" required><option value="">Choisir...</option><option value="Rouge">Rouge</option><option value="Bleu">Bleu</option><option value="Vert">Vert</option><option value="Dark">Dark</option><option value="Light">Light</option></select></div>
+                    <div class="form-group"><label for="edit-unit-rarity">Rareté *</label><select id="edit-unit-rarity" required><option value="">Choisir...</option><option value="R">R</option><option value="SR">SR</option><option value="SSR">SSR</option></select></div>
+                    <div class="form-group full-width"><label for="edit-unit-role">Rôle</label><select id="edit-unit-role"><option value="Pas de rôle">Pas de rôle</option><option value="Attaquant">Attaquant</option><option value="Défenseur">Défenseur</option><option value="Support">Support</option><option value="Soigneur">Soigneur</option></select></div>
+                    <div class="form-group"><label for="edit-unit-stars">Étoiles * (3-6)</label><input type="number" id="edit-unit-stars" min="3" max="6" required></div>
+                    <div class="form-group"><label for="edit-unit-level">Level *</label><input type="number" id="edit-unit-level" min="1" max="100" required></div>
+                    <div class="form-group"><label for="edit-unit-doublon">Doublon *</label><select id="edit-unit-doublon" required><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+                    <div class="form-group"><label for="edit-unit-s1">S1 * (1-5)</label><input type="number" id="edit-unit-s1" min="1" max="5" required></div>
+                    <div class="form-group"><label for="edit-unit-s2">S2 * (1-5)</label><input type="number" id="edit-unit-s2" min="1" max="5" required></div>
+                    <div class="form-group"><label for="edit-unit-s3">S3 * (1-5)</label><input type="number" id="edit-unit-s3" min="1" max="5" required></div>
+                    <div class="form-group full-width"><button type="submit" class="submit-btn">ENREGISTRER LES MODIFICATIONS</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="toast-container"></div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="confirm-title">Confirmation</h2>
+                <span id="confirm-close-btn" class="close-btn">&times;</span>
+            </div>
+            <p id="confirm-message"></p>
+            <div class="modal-actions">
+                <button id="confirm-cancel-btn" class="action-btn clear-btn">Annuler</button>
+                <button id="confirm-ok-btn" class="action-btn delete-selected-btn">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- AMÉLIORATION QoL: Fonctions pour les notifications et confirmations ---
+            const toastContainer = document.getElementById('toast-container');
+            const showToast = (message, type = 'info', duration = 3500) => {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                }, duration);
+            };
+
+            const confirmModal = document.getElementById('confirm-modal');
+            const confirmTitle = document.getElementById('confirm-title');
+            const confirmMessage = document.getElementById('confirm-message');
+            const confirmOkBtn = document.getElementById('confirm-ok-btn');
+            const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+            const confirmCloseBtn = document.getElementById('confirm-close-btn');
+
+            const showConfirm = (title, message) => {
+                return new Promise((resolve) => {
+                    confirmTitle.textContent = title;
+                    confirmMessage.textContent = message;
+                    confirmModal.style.display = 'block';
+
+                    const close = (value) => {
+                        confirmModal.style.display = 'none';
+                        resolve(value);
+                    };
+
+                    confirmOkBtn.onclick = () => close(true);
+                    confirmCancelBtn.onclick = () => close(false);
+                    confirmCloseBtn.onclick = () => close(false);
+                });
+            };
+            // --- Fin des améliorations de notifications ---
+            
+            const imageBaseUrl = 'https://raw.githubusercontent.com/kaiomar8z/Etheriaassets/main/';
+            const addForm = document.getElementById('add-unit-form');
+            const unitListBody = document.getElementById('unit-list-body');
+            const imageInput = document.getElementById('unit-image-input');
+            const imagePlaceholder = document.getElementById('image-placeholder');
+            const unitNameInput = document.getElementById('unit-name');
+            let unitImageData = null;
+            const editModal = document.getElementById('edit-modal');
+            const editForm = document.getElementById('edit-unit-form');
+            const closeModalBtn = document.querySelector('#edit-modal .close-btn'); // Cible plus précise
+            
+            const searchInput = document.getElementById('search-input');
+            const filterElement = document.getElementById('filter-element');
+            const filterRarity = document.getElementById('filter-rarity');
+            const table = document.getElementById('units-table');
+
+            const importInput = document.getElementById('import-input');
+            const importCsvInput = document.getElementById('import-csv-input');
+            const exportBtn = document.getElementById('export-btn');
+
+            const showManagerBtn = document.getElementById('show-manager-btn');
+            const showBuilderBtn = document.getElementById('show-builder-btn');
+            const managerView = document.getElementById('manager-view');
+            const builderView = document.getElementById('builder-view');
+            const teamBuilderUnitList = document.getElementById('team-builder-unit-list');
+            const teamSlotsContainer = document.querySelector('.team-slots');
+            const teamSelect = document.getElementById('team-select');
+            const teamNameInput = document.getElementById('team-name-input');
+            const saveTeamBtn = document.getElementById('save-team-btn');
+            const newTeamBtn = document.getElementById('new-team-btn');
+            const deleteTeamBtn = document.getElementById('delete-team-btn');
+            
+            // --- AMÉLIORATION QoL: Nouveaux éléments DOM ---
+            const clearFormBtn = document.getElementById('clear-form-btn');
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+
+            let units = JSON.parse(localStorage.getItem('etheriaUnits')) || [];
+            let teams = JSON.parse(localStorage.getItem('etheriaTeams')) || [];
+            let activeTeamIndex = 0;
+            let currentSort = { column: 'level', direction: 'desc' };
+            let selectionModeSlotIndex = null;
+
+            const saveUnits = () => localStorage.setItem('etheriaUnits', JSON.stringify(units));
+            const saveTeams = () => localStorage.setItem('etheriaTeams', JSON.stringify(teams));
+            
+            // AMÉLIORATION QoL: Fonction pour vider le formulaire d'ajout
+            const resetAddForm = () => {
+                addForm.reset();
+                unitImageData = null;
+                imagePlaceholder.innerHTML = '<span>Cliquez pour ajouter une image</span>';
+                imageInput.value = '';
+                unitNameInput.focus();
+            }
+
+            const fullAppRefresh = () => {
+                refreshUI();
+                renderTeamSelect();
+                renderActiveTeam();
+            }
+
+            const refreshUI = () => {
+                displayUnits();
+                updateDashboard();
+                updateSelectionState();
+            }
+
+            const switchView = (viewToShow) => {
+                managerView.classList.remove('active');
+                builderView.classList.remove('active', 'flex');
+                showManagerBtn.classList.remove('active');
+                showBuilderBtn.classList.remove('active');
+
+                if (viewToShow === 'manager') {
+                    managerView.classList.add('active');
+                    showManagerBtn.classList.add('active');
+                } else if (viewToShow === 'builder') {
+                    builderView.classList.add('active', 'flex');
+                    showBuilderBtn.classList.add('active');
+                    renderTeamBuilderUnitList();
+                    renderActiveTeam();
+                }
+            };
+            
+            const renderTeamBuilderUnitList = () => {
+                teamBuilderUnitList.innerHTML = '';
+                units.forEach((unit, index) => {
+                    const img = document.createElement('img');
+                    img.src = unit.image || `https://via.placeholder.com/60x60/304065/e0e0e0?text=?`;
+                    img.title = unit.name;
+                    img.draggable = true;
+                    img.dataset.unitIndex = index;
+                    teamBuilderUnitList.appendChild(img);
+                });
+            };
+            
+            const updateSelectionModeUI = () => {
+                document.querySelectorAll('.team-slot').forEach(slot => {
+                    slot.classList.remove('is-selecting');
+                    if (slot.dataset.slotIndex == selectionModeSlotIndex) {
+                        slot.classList.add('is-selecting');
+                    }
+                });
+            };
+
+            const renderActiveTeam = () => {
+                teamSlotsContainer.innerHTML = '';
+                 if (!teams[activeTeamIndex] && teams.length > 0) {
+                    activeTeamIndex = 0;
+                }
+                if (!teams[activeTeamIndex]) return;
+
+                teamNameInput.value = teams[activeTeamIndex].name;
+                const currentTeamUnits = teams[activeTeamIndex].units;
+
+                for(let i=0; i<5; i++) {
+                    const slot = document.createElement('div');
+                    slot.classList.add('team-slot');
+                    slot.dataset.slotIndex = i;
+
+                    const unit = currentTeamUnits[i];
+                    if (unit) {
+                        slot.innerHTML = `
+                            <img src="${unit.image || `https://via.placeholder.com/100x100/304065/e0e0e0?text=?`}" title="${unit.name}">
+                            <button class="remove-from-team-btn" data-slot-index="${i}">&times;</button>
+                        `;
+                    } else {
+                        slot.innerText = `Slot ${i + 1}`;
+                    }
+                    teamSlotsContainer.appendChild(slot);
+                }
+                updateSelectionModeUI();
+            };
+
+            const renderTeamSelect = () => {
+                teamSelect.innerHTML = '';
+                if(teams.length === 0) {
+                    teams.push({ name: 'Mon Équipe', units: [null, null, null, null, null] });
+                    activeTeamIndex = 0;
+                    saveTeams();
+                }
+                teams.forEach((team, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = team.name;
+                    if(index === activeTeamIndex) {
+                        option.selected = true;
+                    }
+                    teamSelect.appendChild(option);
+                });
+            };
+
+            const updateDashboard = () => {
+                const totalUnits = units.length;
+                document.getElementById('stat-total-units').innerText = totalUnits;
+                const rarityCounts = units.reduce((acc, unit) => {
+                    acc[unit.rarity] = (acc[unit.rarity] || 0) + 1;
+                    return acc;
+                }, {});
+                document.getElementById('stat-ssr-count').innerText = rarityCounts['SSR'] || 0;
+                document.getElementById('stat-sr-count').innerText = rarityCounts['SR'] || 0;
+                document.getElementById('stat-r-count').innerText = rarityCounts['R'] || 0;
+                const elementCounts = units.reduce((acc, unit) => {
+                    acc[unit.element] = (acc[unit.element] || 0) + 1;
+                    return acc;
+                }, {});
+                const elementDistributionDiv = document.getElementById('stat-element-distribution');
+                elementDistributionDiv.innerHTML = '';
+                const elementOrder = ['Rouge', 'Bleu', 'Vert', 'Light', 'Dark'];
+                elementOrder.forEach(element => {
+                    const count = elementCounts[element] || 0;
+                    if(count > 0 || totalUnits === 0) {
+                         const percentage = totalUnits > 0 ? (count / totalUnits) * 100 : 0;
+                        const barHtml = `
+                            <div class="element-bar">
+                                <span class="element-label">${element}</span>
+                                <div class="element-progress-bar">
+                                    <div class="element-progress progress-${element}" style="width: ${percentage}%;"></div>
+                                </div>
+                                <span class="element-count">${count}</span>
+                            </div>`;
+                        elementDistributionDiv.innerHTML += barHtml;
+                    }
+                });
+            };
+            
+            const findUnitImage = async () => {
+                const unitName = unitNameInput.value.trim().toLowerCase();
+                if (!unitName) return;
+                const formattedName = unitName.replace(/ /g, '_');
+                const extensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+                let foundImageUrl = null;
+                imagePlaceholder.innerHTML = '<span><i class="fa-solid fa-spinner fa-spin"></i> Recherche...</span>';
+                for (const ext of extensions) {
+                    const potentialUrl = `${imageBaseUrl}${formattedName}.${ext}`;
+                    try {
+                        const response = await fetch(potentialUrl, { method: 'HEAD', cache: 'no-cache' });
+                        if (response.ok) { foundImageUrl = potentialUrl; break; }
+                    } catch (error) { console.error(error); }
+                }
+                if (foundImageUrl) {
+                    const response = await fetch(foundImageUrl);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        unitImageData = e.target.result;
+                        imagePlaceholder.innerHTML = `<img src="${unitImageData}" alt="${unitName}">`;
+                    };
+                    reader.readAsDataURL(blob);
+                } else {
+                    unitImageData = null;
+                    imagePlaceholder.innerHTML = '<span>Image non trouvée.<br>Cliquez pour uploader.</span>';
+                }
+            };
+            
+            const renderSkills = (unit) => {
+                const renderSkillLevel = (level) => `<span class="filled">●</span>`.repeat(level) + `<span class="empty">●</span>`.repeat(5 - level);
+                return `<div class="skill-item"><span class="skill-label">S1</span><span class="skill-dots">${renderSkillLevel(unit.s1)}</span></div><div class="skill-item"><span class="skill-label">S2</span><span class="skill-dots">${renderSkillLevel(unit.s2)}</span></div><div class="skill-item"><span class="skill-label">S3</span><span class="skill-dots">${renderSkillLevel(unit.s3)}</span></div>`;
+            };
+            const renderStars = (count) => Array(parseInt(count)).fill('<i class="fa-solid fa-star"></i>').join('');
+            const renderDoublons = (count) => `<span style="color: hsl(${(parseInt(count) * 20)}, 100%, 60%); font-weight: bold; font-size: 1.5em">${'●'.repeat(parseInt(count))}</span><span style="opacity:0.3;">${'●'.repeat(5 - parseInt(count))}</span>`;
+
+            const displayUnits = () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedElement = filterElement.value;
+                const selectedRarity = filterRarity.value;
+                let processedUnits = units.filter(unit => {
+                    const matchesSearch = unit.name.toLowerCase().includes(searchTerm);
+                    const matchesElement = !selectedElement || unit.element === selectedElement;
+                    const matchesRarity = !selectedRarity || unit.rarity === selectedRarity;
+                    return matchesSearch && matchesElement && matchesRarity;
+                });
+                processedUnits.sort((a, b) => {
+                    const valA = a[currentSort.column];
+                    const valB = b[currentSort.column];
+                    const direction = currentSort.direction === 'asc' ? 1 : -1;
+                    if (typeof valA === 'string') {
+                        return valA.localeCompare(valB) * direction;
+                    } else {
+                        return (valA - valB) * direction;
+                    }
+                });
+                renderTable(processedUnits);
+                updateSortHeaders();
+            };
+
+            const renderTable = (unitsToDisplay) => {
+                unitListBody.innerHTML = '';
+                if (unitsToDisplay.length === 0) {
+                    unitListBody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 40px; color: var(--text-color-muted);">Aucune unité ne correspond à vos critères.</td></tr>`;
+                    return;
+                }
+                unitsToDisplay.forEach(unit => {
+                    const originalIndex = units.findIndex(originalUnit => originalUnit === unit);
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="checkbox-cell">
+                            <input type="checkbox" class="unit-checkbox" data-index="${originalIndex}">
+                        </td>
+                        <td class="unit-image-cell">
+                            <img src="${unit.image || `https://via.placeholder.com/40x40/304065/e0e0e0?text=?`}" alt="${unit.name}">
+                            <span title="${unit.name}">${unit.name}</span>
+                        </td>
+                        <td>${unit.element}</td><td>${unit.rarity}</td><td>${unit.role}</td>
+                        <td class="stars">${renderStars(unit.stars)}</td><td>${unit.level}</td>
+                        <td>${renderDoublons(unit.doublon)}</td><td class="unit-habiletes">${renderSkills(unit)}</td>
+                        <td class="action-buttons">
+                            <button class="edit-btn" data-index="${originalIndex}" title="Modifier"><i class="fa-solid fa-pencil"></i></button>
+                            <button class="delete-btn" data-index="${originalIndex}" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                        </td>`;
+                    unitListBody.appendChild(tr);
+                });
+            };
+
+            const updateSortHeaders = () => {
+                table.querySelectorAll('thead th').forEach(th => {
+                    const sortKey = th.dataset.sort;
+                    if (sortKey) {
+                        th.classList.remove('sorted', 'asc', 'desc');
+                        const arrow = th.querySelector('.sort-arrow');
+                        if (sortKey === currentSort.column) {
+                            th.classList.add('sorted', currentSort.direction);
+                            arrow.innerHTML = currentSort.direction === 'asc' ? '<i class="fa-solid fa-arrow-up"></i>' : '<i class="fa-solid fa-arrow-down"></i>';
+                        } else {
+                             arrow.innerHTML = '';
+                        }
+                    }
+                });
+            };
+
+            function openEditModal(index) {
+                const unit = units[index];
+                document.getElementById('edit-unit-index').value = index;
+                document.getElementById('edit-unit-name').value = unit.name;
+                document.getElementById('edit-unit-element').value = unit.element;
+                document.getElementById('edit-unit-rarity').value = unit.rarity;
+                document.getElementById('edit-unit-role').value = unit.role;
+                document.getElementById('edit-unit-stars').value = unit.stars;
+                document.getElementById('edit-unit-level').value = unit.level;
+                document.getElementById('edit-unit-doublon').value = unit.doublon;
+                document.getElementById('edit-unit-s1').value = unit.s1;
+                document.getElementById('edit-unit-s2').value = unit.s2;
+                document.getElementById('edit-unit-s3').value = unit.s3;
+                editModal.style.display = 'block';
+            }
+
+            function closeEditModal() { editModal.style.display = 'none'; }
+            
+            showManagerBtn.addEventListener('click', () => switchView('manager'));
+            showBuilderBtn.addEventListener('click', () => switchView('builder'));
+
+            addForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const newUnit = {
+                    name: unitNameInput.value, image: unitImageData, element: document.getElementById('unit-element').value,
+                    rarity: document.getElementById('unit-rarity').value, role: document.getElementById('unit-role').value,
+                    stars: parseInt(document.getElementById('unit-stars').value), level: parseInt(document.getElementById('unit-level').value),
+                    doublon: parseInt(document.getElementById('unit-doublon').value), s1: parseInt(document.getElementById('unit-s1').value),
+                    s2: parseInt(document.getElementById('unit-s2').value), s3: parseInt(document.getElementById('unit-s3').value),
+                };
+                units.push(newUnit);
+                saveUnits();
+                refreshUI();
+                resetAddForm();
+                showToast(`'${newUnit.name}' a été ajouté.`, 'success');
+            });
+
+            unitListBody.addEventListener('click', async (event) => {
+                const button = event.target.closest('button');
+                if (button) {
+                    const index = parseInt(button.dataset.index);
+                    if (button.classList.contains('edit-btn')) { openEditModal(index); }
+                    if (button.classList.contains('delete-btn')) {
+                        const confirmed = await showConfirm('Supprimer l\'unité', `Êtes-vous sûr de vouloir supprimer ${units[index].name} ?`);
+                        if (confirmed) {
+                            units.splice(index, 1);
+                            saveUnits();
+                            fullAppRefresh();
+                            showToast('Unité supprimée.', 'info');
+                        }
+                    }
+                }
+
+                if (event.target.classList.contains('unit-checkbox')) {
+                    updateSelectionState();
+                }
+            });
+
+            editForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const index = parseInt(document.getElementById('edit-unit-index').value);
+                const unitToUpdate = units[index];
+                unitToUpdate.name = document.getElementById('edit-unit-name').value;
+                unitToUpdate.element = document.getElementById('edit-unit-element').value;
+                unitToUpdate.rarity = document.getElementById('edit-unit-rarity').value;
+                unitToUpdate.role = document.getElementById('edit-unit-role').value;
+                unitToUpdate.stars = parseInt(document.getElementById('edit-unit-stars').value);
+                unitToUpdate.level = parseInt(document.getElementById('edit-unit-level').value);
+                unitToUpdate.doublon = parseInt(document.getElementById('edit-unit-doublon').value);
+                unitToUpdate.s1 = parseInt(document.getElementById('edit-unit-s1').value);
+                unitToUpdate.s2 = parseInt(document.getElementById('edit-unit-s2').value);
+                unitToUpdate.s3 = parseInt(document.getElementById('edit-unit-s3').value);
+                saveUnits();
+                refreshUI();
+                closeEditModal();
+                showToast('Modifications enregistrées.', 'success');
+            });
+            
+            unitNameInput.addEventListener('blur', findUnitImage);
+            imagePlaceholder.addEventListener('click', () => imageInput.click());
+            imageInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        unitImageData = e.target.result;
+                        imagePlaceholder.innerHTML = `<img src="${unitImageData}" alt="Aperçu de l'unité">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            searchInput.addEventListener('input', displayUnits);
+            filterElement.addEventListener('change', displayUnits);
+            filterRarity.addEventListener('change', displayUnits);
+            table.querySelector('thead').addEventListener('click', (event) => {
+                const header = event.target.closest('th');
+                if (!header || !header.classList.contains('sortable')) return;
+                const sortKey = header.dataset.sort;
+                if (currentSort.column === sortKey) {
+                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.column = sortKey;
+                    currentSort.direction = 'asc';
+                }
+                displayUnits();
+            });
+            closeModalBtn.addEventListener('click', closeEditModal);
+            window.addEventListener('click', (event) => { if (event.target == editModal) closeEditModal(); });
+
+            exportBtn.addEventListener('click', () => {
+                if (units.length === 0 && teams.length === 0) {
+                    showToast("Il n'y a aucune donnée à exporter.", 'info');
+                    return;
+                }
+                const backupData = { units: units, teams: teams };
+                const dataStr = JSON.stringify(backupData, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `etheria_manager_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Exportation réussie !', 'success');
+            });
+
+            importInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        const confirmed = await showConfirm('Importer un fichier JSON', "Voulez-vous vraiment remplacer vos unités et équipes par les données importées ? Cette action est irréversible.");
+                        if (confirmed) {
+                            units = importedData.units || [];
+                            teams = importedData.teams || [];
+                            saveUnits(); saveTeams();
+                            fullAppRefresh();
+                            showToast("Importation complète réussie !", 'success');
+                        }
+                    } catch (error) {
+                        showToast("Erreur : Le fichier est invalide ou corrompu.", 'error');
+                    } finally {
+                        importInput.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            importCsvInput.addEventListener('change', (event) => {
+                const file = event.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const csvContent = e.target.result;
+                        const lines = csvContent.split(/\r?\n/).filter(line => line.trim() !== '');
+                        if (lines.length <= 1) throw new Error("Le fichier CSV est vide ou ne contient que l'en-tête.");
+                        const header = lines[0]; const delimiter = header.split(';').length > header.split(',').length ? ';' : ',';
+                        const dataLines = lines.slice(1); let updatedCount = 0; let addedCount = 0;
+                        dataLines.forEach(line => {
+                            const columns = line.split(delimiter); if (columns.length < 10) return;
+                            const unitData = {
+                                name: columns[0].trim(), element: columns[1].trim(), rarity: columns[2].trim(), role: columns[3].trim(),
+                                stars: parseInt(columns[4].trim(), 10) || 0, level: parseInt(columns[5].trim(), 10) || 1,
+                                doublon: parseInt(columns[6].trim(), 10) || 0, s1: parseInt(columns[7].trim(), 10) || 1,
+                                s2: parseInt(columns[8].trim(), 10) || 1, s3: parseInt(columns[9].trim(), 10) || 1, image: null
+                            };
+                            const existingUnitIndex = units.findIndex(u => u.name === unitData.name);
+                            if (existingUnitIndex > -1) {
+                                const existingUnit = units[existingUnitIndex];
+                                units[existingUnitIndex] = { ...existingUnit, ...unitData, image: existingUnit.image };
+                                updatedCount++;
+                            } else { units.push(unitData); addedCount++; }
+                        });
+                        saveUnits(); fullAppRefresh();
+                        showToast(`Importation CSV: ${addedCount} ajouté(s), ${updatedCount} mis à jour.`, 'success');
+                    } catch (error) { showToast("Erreur lors de l'importation du CSV.", 'error');
+                    } finally { importCsvInput.value = ''; }
+                };
+                reader.readAsText(file, 'UTF-8');
+            });
+            
+            // --- AMÉLIORATION QoL: Logique pour les nouvelles fonctionnalités ---
+            clearFormBtn.addEventListener('click', resetAddForm);
+            
+            selectAllCheckbox.addEventListener('change', () => {
+                document.querySelectorAll('.unit-checkbox').forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+                updateSelectionState();
+            });
+
+            const updateSelectionState = () => {
+                const allCheckboxes = document.querySelectorAll('.unit-checkbox');
+                const checkedCheckboxes = document.querySelectorAll('.unit-checkbox:checked');
+                
+                if (checkedCheckboxes.length > 0) {
+                    deleteSelectedBtn.style.display = 'inline-flex';
+                    deleteSelectedBtn.textContent = `Supprimer (${checkedCheckboxes.length})`;
+                } else {
+                    deleteSelectedBtn.style.display = 'none';
+                }
+
+                if(allCheckboxes.length > 0 && allCheckboxes.length === checkedCheckboxes.length) {
+                    selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
+                } else if (checkedCheckboxes.length > 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = true;
+                } else {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                }
+            };
+            
+            deleteSelectedBtn.addEventListener('click', async () => {
+                const selectedIndices = Array.from(document.querySelectorAll('.unit-checkbox:checked')).map(cb => parseInt(cb.dataset.index));
+                if (selectedIndices.length === 0) return;
+
+                const confirmed = await showConfirm('Suppression en masse', `Êtes-vous sûr de vouloir supprimer ${selectedIndices.length} unité(s) ?`);
+                if(confirmed) {
+                    // Trier les indices en ordre décroissant pour éviter les problèmes avec splice
+                    selectedIndices.sort((a, b) => b - a); 
+                    selectedIndices.forEach(index => units.splice(index, 1));
+                    saveUnits();
+                    fullAppRefresh();
+                    showToast(`${selectedIndices.length} unité(s) supprimée(s).`, 'success');
+                }
+            });
+
+            // --- Fin de la logique QoL ---
+
+            teamBuilderUnitList.addEventListener('dragstart', (e) => { if(e.target.tagName === 'IMG') e.dataTransfer.setData('text/plain', e.target.dataset.unitIndex); });
+            teamSlotsContainer.addEventListener('dragover', (e) => { e.preventDefault(); const slot = e.target.closest('.team-slot'); if (slot) slot.classList.add('drag-over'); });
+            teamSlotsContainer.addEventListener('dragleave', (e) => { const slot = e.target.closest('.team-slot'); if (slot) slot.classList.remove('drag-over'); });
+            teamSlotsContainer.addEventListener('drop', (e) => { e.preventDefault(); const slot = e.target.closest('.team-slot'); if(slot) { slot.classList.remove('drag-over'); const unitIndex = e.dataTransfer.getData('text/plain'); const slotIndex = slot.dataset.slotIndex; teams[activeTeamIndex].units[slotIndex] = units[unitIndex]; saveTeams(); renderActiveTeam(); }});
+            teamSlotsContainer.addEventListener('click', (e) => { const target = e.target; const slot = target.closest('.team-slot'); if (target.classList.contains('remove-from-team-btn')) { const slotIndex = target.dataset.slotIndex; teams[activeTeamIndex].units[slotIndex] = null; saveTeams(); renderActiveTeam(); selectionModeSlotIndex = null; updateSelectionModeUI(); } else if (slot) { const clickedSlotIndex = parseInt(slot.dataset.slotIndex); if (selectionModeSlotIndex === clickedSlotIndex) { selectionModeSlotIndex = null; } else { selectionModeSlotIndex = clickedSlotIndex; } updateSelectionModeUI(); }});
+            teamBuilderUnitList.addEventListener('click', (e) => { if (e.target.tagName === 'IMG' && selectionModeSlotIndex !== null) { const unitIndex = e.target.dataset.unitIndex; teams[activeTeamIndex].units[selectionModeSlotIndex] = units[unitIndex]; saveTeams(); renderActiveTeam(); selectionModeSlotIndex = null; updateSelectionModeUI(); }});
+            teamSelect.addEventListener('change', () => { activeTeamIndex = parseInt(teamSelect.value); renderActiveTeam(); });
+            saveTeamBtn.addEventListener('click', () => { const newName = teamNameInput.value.trim(); if (newName) { teams[activeTeamIndex].name = newName; saveTeams(); renderTeamSelect(); showToast('Nom de l\'équipe sauvegardé !', 'success'); } else { showToast('Veuillez donner un nom à votre équipe.', 'info'); }});
+            newTeamBtn.addEventListener('click', () => { teams.push({ name: 'Nouvelle Équipe', units: [null, null, null, null, null] }); activeTeamIndex = teams.length - 1; saveTeams(); renderTeamSelect(); renderActiveTeam(); });
+            deleteTeamBtn.addEventListener('click', async () => { if(teams.length <= 1) { showToast("Vous ne pouvez pas supprimer votre dernière équipe.", 'info'); return; } const confirmed = await showConfirm('Supprimer l\'équipe', `Êtes-vous sûr de vouloir supprimer l'équipe "${teams[activeTeamIndex].name}" ?`); if(confirmed) { teams.splice(activeTeamIndex, 1); activeTeamIndex = 0; saveTeams(); renderTeamSelect(); renderActiveTeam(); showToast('Équipe supprimée.', 'success'); }});
+
+            fullAppRefresh();
+            switchView('manager');
+        });
+    </script>
+</body>
+</html>
